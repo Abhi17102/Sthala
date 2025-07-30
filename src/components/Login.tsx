@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, MapPin, ArrowLeft } from 'lucide-react';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
+import { initializeApp } from 'firebase/app';
 
 interface LoginProps {
   onBack: () => void;
@@ -15,18 +18,51 @@ const Login: React.FC<LoginProps> = ({ onBack }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitted(true);
-    setTimeout(() => {
-      setIsSubmitted(false);
-      setFormData({ fullName: '', mobile: '', email: '', password: '' });
-    }, 3000);
+    setError(null);
+    if (isLogin) {
+      // Login logic
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        const user = userCredential.user;
+        // Optionally fetch user profile from Firestore
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        setIsSubmitted(true);
+        setTimeout(() => {
+          setIsSubmitted(false);
+          setFormData({ fullName: '', mobile: '', email: '', password: '' });
+        }, 3000);
+      } catch (err: any) {
+        setError(err.message || 'Login failed.');
+      }
+    } else {
+      // Signup logic
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        const user = userCredential.user;
+        // Store user profile in Firestore
+        await setDoc(doc(db, 'users', user.uid), {
+          fullName: formData.fullName,
+          mobile: formData.mobile,
+          email: formData.email,
+          createdAt: new Date().toISOString()
+        });
+        setIsSubmitted(true);
+        setTimeout(() => {
+          setIsSubmitted(false);
+          setFormData({ fullName: '', mobile: '', email: '', password: '' });
+        }, 3000);
+      } catch (err: any) {
+        setError(err.message || 'Registration failed.');
+      }
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -37,6 +73,20 @@ const Login: React.FC<LoginProps> = ({ onBack }) => {
     setIsLogin(!isLogin);
     setIsSubmitted(false);
   };
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCC8MTC35Adn4FDTFQHxjmoibodRY67RCY",
+    authDomain: "sthala-42da0.firebaseapp.com",
+    projectId: "sthala-42da0",
+    storageBucket: "sthala-42da0.appspot.com",
+    messagingSenderId: "512144678960",
+    appId: "1:512144678960:web:98bacd89e8b80c83d48df5",
+    measurementId: "G-3Y3DJ77XMQ"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-secondary via-primary to-accent flex items-center justify-center p-4">
@@ -73,6 +123,10 @@ const Login: React.FC<LoginProps> = ({ onBack }) => {
               {isLogin ? 'Sign in to your account' : 'Create your account to get started'}
             </p>
           </div>
+
+          {!isSubmitted && error && (
+            <div className="text-center text-red-500 mb-4">{error}</div>
+          )}
 
           {!isSubmitted ? (
             <form onSubmit={handleSubmit} className="space-y-6">
