@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Calendar, Clock } from 'lucide-react';
 import TypewriterText from './TypewriterText';
+import ImageSlideshow from './ImageSlideshow';
 
 interface HeroProps {
   onSearch: (searchData: any) => void;
@@ -119,18 +120,11 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
             </div>
           </div>
 
-          {/* Video Section */}
+          {/* Image Slideshow Section */}
           <div className="animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
             <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-              <div className="aspect-video bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-black/20"></div>
-                <div className="text-white text-center z-10">
-                  <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <div className="w-0 h-0 border-l-8 border-r-0 border-t-6 border-b-6 border-l-white border-t-transparent border-b-transparent ml-1"></div>
-                  </div>
-                  <p className="text-lg font-medium">Event Venues Showcase</p>
-                  <p className="text-sm opacity-80">Discover amazing spaces</p>
-                </div>
+              <div className="aspect-video rounded-xl overflow-hidden">
+                <ImageSlideshow />
               </div>
             </div>
           </div>
