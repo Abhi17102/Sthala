@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 const TypewriterText: React.FC = () => {
   const [displayText, setDisplayText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const fullText = 'Rent. Work. Move.';
+  const fullText = 'Workspaces When You Need.';
 
   useEffect(() => {
     if (currentIndex < fullText.length) {

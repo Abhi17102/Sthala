@@ -6,9 +6,10 @@ import { initializeApp } from 'firebase/app';
 
 interface LoginProps {
   onBack: () => void;
+  onLoginSuccess?: (userData: any) => void;
 }
 
-const Login: React.FC<LoginProps> = ({ onBack }) => {
+const Login: React.FC<LoginProps> = ({ onBack, onLoginSuccess }) => {
   const [formData, setFormData] = useState({
     fullName: '',
     mobile: '',
@@ -17,7 +18,7 @@ const Login: React.FC<LoginProps> = ({ onBack }) => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(true); // Default to login view
   const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (field: string, value: string) => {
@@ -34,10 +35,15 @@ const Login: React.FC<LoginProps> = ({ onBack }) => {
         const user = userCredential.user;
         // Optionally fetch user profile from Firestore
         const userDoc = await getDoc(doc(db, 'users', user.uid));
+        const userData = userDoc.exists() ? userDoc.data() : { email: user.email };
         setIsSubmitted(true);
         setTimeout(() => {
           setIsSubmitted(false);
           setFormData({ fullName: '', mobile: '', email: '', password: '' });
+          // Call onLoginSuccess with user data
+          if (onLoginSuccess) {
+            onLoginSuccess(userData);
+          }
         }, 3000);
       } catch (err: any) {
         setError(err.message || 'Login failed.');
@@ -48,16 +54,21 @@ const Login: React.FC<LoginProps> = ({ onBack }) => {
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         const user = userCredential.user;
         // Store user profile in Firestore
-        await setDoc(doc(db, 'users', user.uid), {
+        const userData = {
           fullName: formData.fullName,
           mobile: formData.mobile,
           email: formData.email,
           createdAt: new Date().toISOString()
-        });
+        };
+        await setDoc(doc(db, 'users', user.uid), userData);
         setIsSubmitted(true);
         setTimeout(() => {
           setIsSubmitted(false);
           setFormData({ fullName: '', mobile: '', email: '', password: '' });
+          // Call onLoginSuccess with user data
+          if (onLoginSuccess) {
+            onLoginSuccess(userData);
+          }
         }, 3000);
       } catch (err: any) {
         setError(err.message || 'Registration failed.');
@@ -117,10 +128,10 @@ const Login: React.FC<LoginProps> = ({ onBack }) => {
               <span className="text-3xl font-bold text-text">Sthala</span>
             </div>
             <h1 className="text-2xl font-bold text-text mb-2">
-              {isLogin ? 'Welcome Back!' : 'Join Sthala'}
+              {isLogin ? 'Login to Sthala' : 'Register for Sthala'}
             </h1>
             <p className="text-secondary">
-              {isLogin ? 'Sign in to your account' : 'Create your account to get started'}
+              If you are new, please register first. If you already have an account, please login.
             </p>
           </div>
 
@@ -130,35 +141,38 @@ const Login: React.FC<LoginProps> = ({ onBack }) => {
 
           {!isSubmitted ? (
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-secondary mb-2">
-                  Full Name
-                </label>
-                <input 
-                  type="text"
-                  required
-                  className="w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                  value={formData.fullName}
-                  onChange={(e) => handleInputChange('fullName', e.target.value)}
-                  placeholder="Enter your full name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-secondary mb-2">
-                  Mobile Number
-                </label>
-                <input 
-                  type="tel"
-                  required
-                  pattern="[0-9]{10}"
-                  className="w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
-                  value={formData.mobile}
-                  onChange={(e) => handleInputChange('mobile', e.target.value)}
-                  placeholder="Enter 10-digit mobile number"
-                />
-              </div>
-
+              {/* Signup fields only shown in register mode */}
+              {!isLogin && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-secondary mb-2">
+                      Full Name
+                    </label>
+                    <input 
+                      type="text"
+                      required
+                      className="w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                      value={formData.fullName}
+                      onChange={(e) => handleInputChange('fullName', e.target.value)}
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-secondary mb-2">
+                      Mobile Number
+                    </label>
+                    <input 
+                      type="tel"
+                      required
+                      pattern="[0-9]{10}"
+                      className="w-full p-4 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200"
+                      value={formData.mobile}
+                      onChange={(e) => handleInputChange('mobile', e.target.value)}
+                      placeholder="Enter 10-digit mobile number"
+                    />
+                  </div>
+                </>
+              )}
               <div>
                 <label className="block text-sm font-medium text-secondary mb-2">
                   Email Address
@@ -172,7 +186,6 @@ const Login: React.FC<LoginProps> = ({ onBack }) => {
                   placeholder="Enter your email address"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-secondary mb-2">
                   Password
@@ -195,7 +208,6 @@ const Login: React.FC<LoginProps> = ({ onBack }) => {
                   </button>
                 </div>
               </div>
-
               <button 
                 type="submit"
                 className="w-full bg-primary hover:bg-orange-600 text-white p-4 rounded-lg font-semibold text-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"

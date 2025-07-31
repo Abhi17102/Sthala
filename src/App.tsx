@@ -12,12 +12,21 @@ function App() {
   const [selectedVenue, setSelectedVenue] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [user, setUser] = useState(null); // Track logged in user
 
   const handleSearch = (data: any) => {
     setSearchData(data);
   };
 
   const handleBook = (venue: any) => {
+    // Check if user is logged in
+    if (!user) {
+      // If not logged in, show login page
+      setShowLogin(true);
+      return;
+    }
+    
+    // If logged in, proceed with booking
     setSelectedVenue(venue);
     setIsModalOpen(true);
   };
@@ -35,6 +44,15 @@ function App() {
     setShowLogin(false);
   };
 
+  const handleLoginSuccess = (userData: any) => {
+    setUser(userData);
+    setShowLogin(false);
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+  };
+
   const handleChatbotSearch = (data: any) => {
     setSearchData(data);
     setShowLogin(false);
@@ -43,7 +61,7 @@ function App() {
   if (showLogin) {
     return (
       <>
-        <Login onBack={handleBackToHome} />
+        <Login onBack={handleBackToHome} onLoginSuccess={handleLoginSuccess} />
         <Chatbot onSearch={handleChatbotSearch} />
       </>
     );
@@ -51,7 +69,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onLogin={handleShowLogin} />
+      <Header onLogin={handleShowLogin} user={user} onLogout={handleLogout} />
       <Hero onSearch={handleSearch} />
       {searchData && (
         <SearchResults searchData={searchData} onBook={handleBook} />

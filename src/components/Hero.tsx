@@ -121,9 +121,9 @@ const Hero: React.FC<HeroProps> = ({ onSearch }) => {
           </div>
 
           {/* Image Slideshow Section */}
-          <div className="animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20">
-              <div className="aspect-video rounded-xl overflow-hidden">
+          <div className="flex items-center h-full w-full animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
+            <div className="w-full h-full">
+              <div className="rounded-2xl overflow-hidden w-full h-full">
                 <ImageSlideshow />
               </div>
             </div>
